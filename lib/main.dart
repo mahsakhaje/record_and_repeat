@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
@@ -37,9 +37,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  FlutterSoundRecorder _myRecorder;
+  FlutterSoundRecorder? _myRecorder;
   final audioPlayer = AssetsAudioPlayer();
-  String filePath;
+  String? filePath;
   bool _play = false;
   String _recorderTxt = '00:00:00';
 
@@ -53,12 +53,14 @@ class _MyHomePageState extends State<MyHomePage> {
     filePath = '/sdcard/Download/temp.wav';
     _myRecorder = FlutterSoundRecorder();
 
-    await _myRecorder.openAudioSession(
-        focus: AudioFocus.requestFocusAndStopOthers,
-        category: SessionCategory.playAndRecord,
-        mode: SessionMode.modeDefault,
-        device: AudioDevice.speaker);
-    await _myRecorder.setSubscriptionDuration(Duration(milliseconds: 10));
+    await _myRecorder?.openRecorder(
+
+        // focus: AudioFocus.requestFocusAndStopOthers,
+        // category: SessionCategory.playAndRecord,
+        // mode: SessionMode.modeDefault,
+        // device: AudioDevice.speaker
+    );
+    await _myRecorder?.setSubscriptionDuration(Duration(milliseconds: 1000));
     await initializeDateFormatting();
 
     await Permission.microphone.request();
@@ -86,10 +88,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color.fromARGB(255, 2, 199, 226), Color.fromARGB(255, 6, 75, 210)],
+                  colors: [
+                    Color.fromARGB(255, 2, 199, 226),
+                    Color.fromARGB(255, 6, 75, 210)
+                  ],
                 ),
                 borderRadius: BorderRadius.vertical(
-                  bottom: Radius.elliptical(MediaQuery.of(context).size.width, 100.0),
+                  bottom: Radius.elliptical(
+                      MediaQuery.of(context).size.width, 100.0),
                 ),
               ),
               child: Center(
@@ -180,7 +186,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  ElevatedButton buildElevatedButton({IconData icon, Color iconColor, Function f}) {
+  ElevatedButton buildElevatedButton(
+      {required IconData icon, required Color iconColor, required Function f}) {
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
         padding: EdgeInsets.all(5.0),
@@ -194,7 +201,7 @@ class _MyHomePageState extends State<MyHomePage> {
         primary: Colors.white,
         elevation: 10.0,
       ),
-      onPressed: f,
+      onPressed: () => f,
       icon: Icon(
         icon,
         color: iconColor,
@@ -205,35 +212,37 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> record() async {
-    Directory dir = Directory(path.dirname(filePath));
+    Directory dir = Directory(path.dirname(filePath ?? ''));
     if (!dir.existsSync()) {
       dir.createSync();
     }
-    _myRecorder.openAudioSession();
-    await _myRecorder.startRecorder(
+    _myRecorder?.openRecorder();
+    await _myRecorder?.startRecorder(
       toFile: filePath,
       codec: Codec.pcm16WAV,
     );
 
-    StreamSubscription _recorderSubscription = _myRecorder.onProgress.listen((e) {
-      var date = DateTime.fromMillisecondsSinceEpoch(e.duration.inMilliseconds, isUtc: true);
+    StreamSubscription? _recorderSubscription =
+        _myRecorder?.onProgress?.listen((e) {
+      var date = DateTime.fromMillisecondsSinceEpoch(e.duration.inMilliseconds,
+          isUtc: true);
       var txt = DateFormat('mm:ss:SS', 'en_GB').format(date);
 
       setState(() {
         _recorderTxt = txt.substring(0, 8);
       });
     });
-    _recorderSubscription.cancel();
+    _recorderSubscription?.cancel();
   }
 
-  Future<String> stopRecord() async {
-    _myRecorder.closeAudioSession();
-    return await _myRecorder.stopRecorder();
+  Future<String?> stopRecord() async {
+    _myRecorder?.closeRecorder();
+    return await _myRecorder?.stopRecorder();
   }
 
   Future<void> startPlaying() async {
     audioPlayer.open(
-      Audio.file(filePath),
+      Audio.file(filePath ?? ""),
       autoStart: true,
       showNotification: true,
     );
